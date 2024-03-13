@@ -5,14 +5,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.apache.catalina.startup.LifecycleListenerRule;
+
 import org.modelmapper.ModelMapper;
-import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import com.fasterxml.jackson.databind.ser.std.IterableSerializer;
-
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import telran.java51.book.dao.AuthorRepository;
 import telran.java51.book.dao.BookRepository;
@@ -34,7 +31,7 @@ public class BookServiceImpl implements BookService {
 	final ModelMapper modelMapper;
 
 	
-	@org.springframework.transaction.annotation.Transactional //Используем вариант Spring, в остальных случаях c другими аннотациями - джакарта
+	@Transactional //Используем вариант Spring, в остальных случаях c другими аннотациями - джакарта
 	@Override
 	public boolean addBook(BookDto bookDto) {
 		
@@ -88,7 +85,7 @@ public class BookServiceImpl implements BookService {
 		return modelMapper.map(book, BookDto.class);
 	}
 
-	@org.springframework.transaction.annotation.Transactional
+	@Transactional
 	@Override
 	public BookDto deleteBookByIsbn(String isbn) {
 		
@@ -99,7 +96,7 @@ public class BookServiceImpl implements BookService {
 		return modelMapper.map(book, BookDto.class);
 		
 	}
-	@org.springframework.transaction.annotation.Transactional
+	@Transactional
 	@Override
 	public BookDto updateBookTitle(String isbn, String newTitle) {
 		
@@ -110,7 +107,7 @@ public class BookServiceImpl implements BookService {
 		return modelMapper.map(book, BookDto.class);
 	}
 	
-	@org.springframework.transaction.annotation.Transactional(readOnly = true)
+	@Transactional(readOnly = true)
 	@Override
 	public Iterable <BookDto> findAllBooksByAuthor(String author) {
 		
@@ -135,14 +132,14 @@ public class BookServiceImpl implements BookService {
 
 	}
 
-	@org.springframework.transaction.annotation.Transactional(readOnly = true)
+	@Transactional(readOnly = true)
 	@Override
 	public Iterable<String> findPublisherByAuthor(String author) {
 		
 		return bookRepository.findAllBooksByAuthorsName(author).map(x->x.getPublisher().getPublisherName()).distinct().toList();
 		
 	}
-	@org.springframework.transaction.annotation.Transactional
+	@Transactional
 	@Override
 	public AuthorDto deleteAuthor(String author) {
 		
