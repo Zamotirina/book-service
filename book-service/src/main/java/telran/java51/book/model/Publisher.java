@@ -1,9 +1,11 @@
 package telran.java51.book.model;
 
 import java.io.Serializable;
+import java.util.Set;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,6 +20,8 @@ public class Publisher implements Serializable{
 	
 	@Id
 	String publisherName;
+	@OneToMany(mappedBy = "publisher")
+	Set <Book> books;
 
 	/*
 	 * Добавляем, иначе мы будем получать вместо имени результат непереопрееленного String, то есть ссылку на объект,
@@ -27,6 +31,12 @@ public class Publisher implements Serializable{
 	public String toString() {
 		return publisherName;
 	}
+
+	public Publisher(String publisherName) {
+		super();
+		this.publisherName = publisherName;
+	}
+	
 	
 	
 }

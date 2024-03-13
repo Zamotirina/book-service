@@ -111,15 +111,22 @@ public class BookServiceImpl implements BookService {
 	@Override
 	public Iterable <BookDto> findAllBooksByAuthor(String author) {
 		
-		return bookRepository.findAllBooksByAuthorsName(author).map(x->modelMapper.map(x,BookDto.class)).toList();
+		Author auth = authorRepository.findById(author).orElseThrow(EntityNotFoundException::new);
+		
+		return auth.getBooks().stream().map(x-> modelMapper.map(x, BookDto.class)).toList();
+		
+		//return bookRepository.findAllBooksByAuthorsName(author).map(x->modelMapper.map(x,BookDto.class)).toList();
 	}
 
 	@org.springframework.transaction.annotation.Transactional(readOnly = true)
 	@Override
 	public Iterable<BookDto> findAllBooksByPublisher(String publisher) {
 		
-		return bookRepository.findAllBooksByPublisherPublisherName(publisher).map(x->modelMapper.map(x,BookDto.class)).toList();
+		Publisher publisher2 = publisherRepository.findById(publisher).orElseThrow(EntityNotFoundException::new);
+		
+		//return bookRepository.findAllBooksByPublisherPublisherName(publisher).map(x->modelMapper.map(x,BookDto.class)).toList();
 
+		return  publisher2.getBooks().stream().map(x-> modelMapper.map(x, BookDto.class)).toList();
 	}
 
 	@Override
@@ -132,36 +139,27 @@ public class BookServiceImpl implements BookService {
 
 	}
 
-	/*
-	 * Тут мое домашнее решение переписано на решение в классе.
-	 * 
-	 * В классе мы сделали через publisherRepository и @Query запрос
-	 */
-	//@Transactional(readOnly = true)
+
+	
 	@Override
 	public Iterable<String> findPublisherByAuthor(String author) {
 		
-		//return bookRepository.findAllBooksByAuthorsName(author).map(x->x.getPublisher().getPublisherName()).distinct().toList();
 		
-		return publisherRepository.findByPublishersByAuthor(author);
+		//return publisherRepository.findByPublishersByAuthor(author);
+		
+		return publisherRepository.findDistinctByBooksAuthorsName(author).map(x->x.getPublisherName()).toList();
 	}
 	
-	/*
-	 * Тут мое домашнее решение переписано на решение в классе.
-	 * 
-	 * Моя логика правильная, но мы в классе реализовали другой принцип - удаляем все книги этого автора
-	 * 
-	 * Я же делала - удаляем автора из всех книг
-	 */
-	
+
 	
 	@Transactional
 	@Override
 	public AuthorDto deleteAuthor(String author) {
+	
 		
 //		Author auth = authorRepository.findById(author).orElseThrow(EntityNotFoundException::new);
-//	
-//		bookRepository.findAllBooksByAuthorsName(author).forEach(x->x.getAuthors().remove(auth));
+//		
+//		bookRepository.deleteBooksByAuthorsName(author);
 //		
 //		authorRepository.delete(auth);
 //		
@@ -169,9 +167,7 @@ public class BookServiceImpl implements BookService {
 		
 		Author auth = authorRepository.findById(author).orElseThrow(EntityNotFoundException::new);
 		
-		bookRepository.deleteBooksByAuthorsName(author);
-		
-		authorRepository.delete(auth);
+		authorRepository.deleteById(author);
 		
 		return modelMapper.map(auth, AuthorDto.class);
 		
