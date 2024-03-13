@@ -10,5 +10,5 @@ public interface BookRepository extends JpaRepository<Book, String> {
 
 	Stream <Book> findAllBooksByAuthorsName(String name);
 	Stream <Book> findAllBooksByPublisherPublisherName(String publisherName);
-	
+	void deleteBooksByAuthorsName(String author);
 }
