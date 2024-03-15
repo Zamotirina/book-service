@@ -14,19 +14,25 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Getter
 @Entity
+
+/*
+ * Мы преращаем этот проект в Bi-directional связь, то есть сообщаем родительским классам о детях
+ * 
+ * 1. Добавляем поле Set<Book> books;
+ * 2. Добавляем конструктор с аргументами String publisherName иначе система ругается
+ * 3. Добавляем в родмтельском классе аннотацию 	@OneToMany(mappedBy = "publisher"). все поля должны быть аннотированы. Мы их аннотируем с точки зрения класса, где находится. То есть у одного издетеля много книг, но у каждой книги один издатель
+ * Соответственно в скобках мы указываем поле в классе Book, на основе которого мы сопоставлям классы.
+ */
 public class Publisher implements Serializable{
 
 	private static final long serialVersionUID = -232655132943852677L;
 	
 	@Id
 	String publisherName;
-	@OneToMany(mappedBy = "publisher")
-	Set <Book> books;
+	
+	@OneToMany(mappedBy = "publisher")// все поля должны быть аннотированы. Мы их аннотируем с точки зрения класса, где находится. То есть у одного издетеля много книг, но у каждой книги один издатель
+	Set <Book> books; //Добавляем, чтобы реализовать Bi-directional
 
-	/*
-	 * Добавляем, иначе мы будем получать вместо имени результат непереопрееленного String, то есть ссылку на объект,
-	 * потому что modelMapper мапит объект в стринг через непрепределенный string
-	 */
 	@Override
 	public String toString() {
 		return publisherName;

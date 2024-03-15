@@ -2,6 +2,7 @@ package telran.java51.book.service;
 
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -72,11 +73,7 @@ public class BookServiceImpl implements BookService {
 	
 	}
 
-	/*
-	 * Не ставим тут аннотацию @Transactional, так как у нас все в одно действие.
-	 * 
-	 * Плюс нет стримов. То есть даже формат read-only нам тут не нужен
-	 */
+
 	@Override
 	public BookDto findBookByIsbn(String isbn) {
 	
@@ -107,54 +104,103 @@ public class BookServiceImpl implements BookService {
 		return modelMapper.map(book, BookDto.class);
 	}
 	
-	@Transactional(readOnly = true)
+	//@Transactional(readOnly = true) Убрали при переходе на Bi-directional
 	@Override
 	public Iterable <BookDto> findAllBooksByAuthor(String author) {
+		
+		/*
+		 * Вариант 1. Uni-Uni-directional
+		 */
+		
+		//return bookRepository.findAllBooksByAuthorsName(author).map(x->modelMapper.map(x,BookDto.class)).toList();
+
+		
+		/*
+		 * Вариант 2. Bi-directional
+		 * 
+		 * Транзакционность нам тут уже не нужна, потому что мы не возвращаем стрим из метода
+		 * 
+		 * И находим автора в одно действие
+		 */
 		
 		Author auth = authorRepository.findById(author).orElseThrow(EntityNotFoundException::new);
 		
 		return auth.getBooks().stream().map(x-> modelMapper.map(x, BookDto.class)).toList();
 		
-		//return bookRepository.findAllBooksByAuthorsName(author).map(x->modelMapper.map(x,BookDto.class)).toList();
 	}
 
-	@org.springframework.transaction.annotation.Transactional(readOnly = true)
+	//@Transactional(readOnly = true) Убрали при переходе на Bi-directional
 	@Override
 	public Iterable<BookDto> findAllBooksByPublisher(String publisher) {
 		
-		Publisher publisher2 = publisherRepository.findById(publisher).orElseThrow(EntityNotFoundException::new);
+		/*
+		 * Вариант 1. Uni-Uni-directional
+		 */
+	
 		
 		//return bookRepository.findAllBooksByPublisherPublisherName(publisher).map(x->modelMapper.map(x,BookDto.class)).toList();
+		
+		/*
+		 * Вариант 2. Bi-directional
+		 * 
+		 * Транзакционность можно убрать, так как все происходит в одно действие
+		 */
+		
+		Publisher pub = publisherRepository.findById(publisher).get();
 
-		return  publisher2.getBooks().stream().map(x-> modelMapper.map(x, BookDto.class)).toList();
+		return  pub.getBooks().stream().map(x-> modelMapper.map(x, BookDto.class)).toList();
 	}
 
 	@Override
 	public Iterable<AuthorDto> findAllAuthorsByBook(String isbn) {
 		
 		Book book = bookRepository.findById(isbn).orElseThrow(EntityNotFoundException::new);
-
 		
 		return book.getAuthors().stream().map(x-> modelMapper.map(x, AuthorDto.class)).collect(Collectors.toSet());
 
 	}
 
 
-	
+	@Transactional(readOnly = true) //Добавили при Bi-directional
 	@Override
 	public Iterable<String> findPublisherByAuthor(String author) {
 		
+		/*
+		 * Вариант 1. Uni-directional
+		 * 
+		 * Реализуем через длинный Query запрос с join-ами
+		 */
 		
-		//return publisherRepository.findByPublishersByAuthor(author);
+		//return publisherRepository.findPublishersByAuthor(author);
+		
+		/*
+		 * Вариант 2. bi-directional
+		 * 
+		 * Добавляем транзакционность
+		 */
 		
 		return publisherRepository.findDistinctByBooksAuthorsName(author).map(x->x.getPublisherName()).toList();
 	}
 	
+	/*
+	 * В этом методе можно выбрать сталинский и гитлеровский подход.
+	 * 
+	 * Сталинский - при удалении автора оставлять книгу, но убирать у нее автора
+	 * Гитлеровский - вместе с автором удалять всю книгу, даже если книгу написал коллектив авторов
+	 * 
+	 * В домашке я делала сталинский вариант, а в классе мы работали только с гитлеровским
+	 */
 
 	
 	@Transactional
 	@Override
 	public AuthorDto deleteAuthor(String author) {
+		
+		/*
+		 * Вариант 1. Uni-directional
+		 * 
+		 * У нас однонаправленная связь, поэтому мы сначала удаляли все книги, а потом удалили автора
+		 */
 	
 		
 //		Author auth = authorRepository.findById(author).orElseThrow(EntityNotFoundException::new);
@@ -164,6 +210,14 @@ public class BookServiceImpl implements BookService {
 //		authorRepository.delete(auth);
 //		
 //		return modelMapper.map(auth, AuthorDto.class);
+		
+		/*
+		 * Вариант 2. Bi-directional
+		 * 
+		 * Мы добавили двунаправленную связь и каскадное удаление в классе Author
+		 * 
+		 * Поэтому теперь мы можем удалять все одним действием. Книги удалятся сами
+		 */
 		
 		Author auth = authorRepository.findById(author).orElseThrow(EntityNotFoundException::new);
 		
