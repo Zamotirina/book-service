@@ -21,6 +21,16 @@ import telran.java51.book.model.Author;
 import telran.java51.book.model.Book;
 import telran.java51.book.model.Publisher;
 
+/*
+ * В этом варианте чтобы понять, как работает Hibernate, мы решили реаализовать все руками и
+ * убрать интерфейсы Spting-а JpaRepository
+ * 
+ * После того как мы убрали интерфейсы, тут многое отвалилось, и пришлось менять код немного
+ * 
+ * Также мы добавили реализацию наших репозиториев: BookRepositoryImpl, AuthorRepositoryImpl и AuthorReposotoryImpl
+ */
+
+
 @Service
 @RequiredArgsConstructor
 public class BookServiceImpl implements BookService {
@@ -31,7 +41,7 @@ public class BookServiceImpl implements BookService {
 	final ModelMapper modelMapper;
 
 	
-	@Transactional //Используем вариант Spring, в остальных случаях c другими аннотациями - джакарта
+	@Transactional 
 	@Override
 	public boolean addBook(BookDto bookDto) {
 		
@@ -39,30 +49,45 @@ public class BookServiceImpl implements BookService {
 			
 			return false;
 		}
-		/*
-		 * Этот код не сработает, потому что мы должны соблюдать историчность
-		 * Начала добавить автора, потом уже книгу
-		 */
-	//bookRepository.save(modelMapper.map(bookDto,Book.class));
+
 		
-		
-		/*
-		 * Это два сложных метода. В них мы ищем авторов и издателей и проверяем, есть ли они уже в существующих базах
-		 * 
-		 * Если их нет, то через orElse мы их туда добавляем
-		 * 
-		 * Особенно важно, как во втором методе мы их тут же преобразовываем
-		 */
+//		Publisher publisher = publisherRepository.findById(bookDto.getPublisher())
+//				.orElse(publisherRepository
+//						.save(new Publisher(bookDto.getPublisher())));
 		
 		Publisher publisher = publisherRepository.findById(bookDto.getPublisher())
-				.orElse(publisherRepository
+				.orElseGet(()->publisherRepository
 						.save(new Publisher(bookDto.getPublisher())));
 		
-		Set <Author> authors = bookDto.getAuthors().stream()
-				.map(x-> authorRepository.findById(x.getName())
-						.orElse(authorRepository.save(new Author(x.getName(), x.getBirthDate()))))
-				.collect(Collectors.toSet());
+		/*
+		 * Переписали метод ниже после удаления интерфейсов
+		 */
 		
+		
+//		Set <Author> authors = bookDto.getAuthors().stream()
+//				.map(x-> authorRepository.findById(x.getName())
+//						.orElse(authorRepository.save(new Author(x.getName(), x.getBirthDate()))))
+//				.collect(Collectors.toSet());
+		
+		
+//		Set <Author> authors=bookDto.getAuthors().stream().
+//		map(x-> authorRepository.findById(x.getName())
+//				.orElse(authorRepository.save(new Author(x.getName(), x.getBirthDate()))))
+//		.collect(Collectors.toSet());
+		
+		/*
+		 * Метод выше переписали, чтобы исправить orElse на orElseGet
+		 * 
+		 * Ранее мы неправильно использовали Optional и метод orElse(), потому что он должен получать объект, а у нас сначала происходил save, а потом уже получает объект, 
+		 * соответственно в итоге мы попадаем в то, что такого автора у нас еще нет, и при новой попытке добавить автора приложение слетает, потому что мы пытаемся добавить объект, который уже есть в базе
+		 * 
+		 * Метод orElseGet() уже принимает функцию, а не объект и возвращает либо значение, если оно есть, либо результат выполнения функции
+		 */
+		
+		Set <Author> authors=bookDto.getAuthors().stream().
+		map(x-> authorRepository.findById(x.getName())
+				.orElseGet(()->authorRepository.save(new Author(x.getName(), x.getBirthDate()))))
+		.collect(Collectors.toSet());
 
 		Book book= new Book(bookDto.getIsbn(), bookDto.getTitle(), authors, publisher);
 	
@@ -72,11 +97,6 @@ public class BookServiceImpl implements BookService {
 	
 	}
 
-	/*
-	 * Не ставим тут аннотацию @Transactional, так как у нас все в одно действие.
-	 * 
-	 * Плюс нет стримов. То есть даже формат read-only нам тут не нужен
-	 */
 	@Override
 	public BookDto findBookByIsbn(String isbn) {
 	
