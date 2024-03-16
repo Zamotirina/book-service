@@ -131,22 +131,24 @@ public class BookServiceImpl implements BookService {
 	@Override
 	public Iterable <BookDto> findAllBooksByAuthor(String author) {
 		
-		Author auth = authorRepository.findById(author).orElseThrow(EntityNotFoundException::new);
+//		Author auth = authorRepository.findById(author).orElseThrow(EntityNotFoundException::new);
+//		
+//		return auth.getBooks().stream().map(x-> modelMapper.map(x, BookDto.class)).toList();
 		
-		return auth.getBooks().stream().map(x-> modelMapper.map(x, BookDto.class)).toList();
+		return bookRepository.findAllBooksByAuthorsName(author).map(x->modelMapper.map(x,BookDto.class)).toList();
 		
-		//return bookRepository.findAllBooksByAuthorsName(author).map(x->modelMapper.map(x,BookDto.class)).toList();
+		
 	}
 
 	@org.springframework.transaction.annotation.Transactional(readOnly = true)
 	@Override
 	public Iterable<BookDto> findAllBooksByPublisher(String publisher) {
 		
-		Publisher publisher2 = publisherRepository.findById(publisher).orElseThrow(EntityNotFoundException::new);
+		//Publisher publisher2 = publisherRepository.findById(publisher).orElseThrow(EntityNotFoundException::new);
 		
-		//return bookRepository.findAllBooksByPublisherPublisherName(publisher).map(x->modelMapper.map(x,BookDto.class)).toList();
+		return bookRepository.findAllBooksByPublisherPublisherName(publisher).map(x->modelMapper.map(x,BookDto.class)).toList();
 
-		return  publisher2.getBooks().stream().map(x-> modelMapper.map(x, BookDto.class)).toList();
+		//return  publisher2.getBooks().stream().map(x-> modelMapper.map(x, BookDto.class)).toList();
 	}
 
 	@Override
@@ -177,19 +179,19 @@ public class BookServiceImpl implements BookService {
 	public AuthorDto deleteAuthor(String author) {
 	
 		
-//		Author auth = authorRepository.findById(author).orElseThrow(EntityNotFoundException::new);
-//		
-//		bookRepository.deleteBooksByAuthorsName(author);
-//		
-//		authorRepository.delete(auth);
-//		
-//		return modelMapper.map(auth, AuthorDto.class);
-		
 		Author auth = authorRepository.findById(author).orElseThrow(EntityNotFoundException::new);
 		
-		authorRepository.deleteById(author);
+		bookRepository.deleteBooksByAuthorsName(author);
+		
+		authorRepository.deleteById(auth.getName());
 		
 		return modelMapper.map(auth, AuthorDto.class);
+		
+//		Author auth = authorRepository.findById(author).orElseThrow(EntityNotFoundException::new);
+//		
+//		authorRepository.deleteById(author);
+//		
+//		return modelMapper.map(auth, AuthorDto.class);
 		
 	}
 

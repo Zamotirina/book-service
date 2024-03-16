@@ -18,7 +18,7 @@ import telran.java51.book.model.Publisher;
 public interface PublisherRepository {
 
 	@Query("select distinct p.publisherName from Book b join b.authors a join b.publisher p where a.name=?1")
-	List <String> findByPublishersByAuthor(String author); //Можно сдлеать Set, чтобы издатели были уникальными. Но можно в запросе указать distinct
+	List <String> findPublishersByAuthor(String author); //Можно сдлеать Set, чтобы издатели были уникальными. Но можно в запросе указать distinct
 	
 	Stream <Publisher> findDistinctByBooksAuthorsName (String authorName);
 	

@@ -4,6 +4,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import org.hibernate.boot.jaxb.mapping.NamedQuery;
+import org.hibernate.query.NativeQuery;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import jakarta.persistence.EntityManager;
@@ -18,15 +21,24 @@ public class PublisherRepositoryImpl implements PublisherRepository {
 	
 
 	@Override
-	public List<String> findByPublishersByAuthor(String author) {
-		// TODO Auto-generated method stub
-		return null;
+	public List<String> findPublishersByAuthor(String author) {
+
+		jakarta.persistence.Query query = em.createQuery("select distinct p.publisherName p from Book b join b.authors a join b.publisher p where a.name=:authorName")
+				.setParameter("authorName",author);
+						
+				return query.getResultList();
+		
 	}
+
 
 	@Override
 	public Stream<Publisher> findDistinctByBooksAuthorsName(String authorName) {
-		// TODO Auto-generated method stub
-		return null;
+		
+	
+		jakarta.persistence.Query query = em.createQuery("select distinct publisher p from Book b join b.authors a join b.publisher p where a.name=:authorName")
+		.setParameter("authorName",authorName);
+				
+		return query.getResultStream();
 	}
 
 	@Override

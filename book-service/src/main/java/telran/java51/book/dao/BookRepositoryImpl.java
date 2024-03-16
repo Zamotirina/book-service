@@ -3,6 +3,7 @@ package telran.java51.book.dao;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import org.hibernate.boot.model.internal.EmbeddableBinder;
 import org.springframework.stereotype.Repository;
 
 import jakarta.persistence.Embeddable;
@@ -18,20 +19,33 @@ public class BookRepositoryImpl implements BookRepository {
 	
 	@Override
 	public Stream<Book> findAllBooksByAuthorsName(String name) {
-		// TODO Auto-generated method stub
-		return null;
+		
+		jakarta.persistence.Query query = em.createQuery("select b from Book b join b.authors a where a.name=:name")
+				.setParameter("name",name);
+						
+				return query.getResultStream();
+		
 	}
 
 	@Override
 	public Stream<Book> findAllBooksByPublisherPublisherName(String publisherName) {
-		// TODO Auto-generated method stub
-		return null;
+	
+		
+		jakarta.persistence.Query query = em.createQuery("select b from Book b join b.publisher p where p.publisherName=:publisherName")
+				.setParameter("publisherName",publisherName);
+						
+				return query.getResultStream();
 	}
 
 	@Override
 	public void deleteBooksByAuthorsName(String author) {
-		// TODO Auto-generated method stub
-
+		
+		
+		jakarta.persistence.Query query = em.createQuery("select b from Book b join b.authors a where a.name=:author")
+				.setParameter("author",author);
+	
+		em.clear();
+	
 	}
 
 	@Override
@@ -49,14 +63,16 @@ public class BookRepositoryImpl implements BookRepository {
 
 	@Override
 	public Optional<Book> findById(String isbn) {
-		// TODO Auto-generated method stub
-		return Optional.empty();
+
+		return Optional.ofNullable(em.find(Book.class,isbn));
 	}
 
 	@Override
 	public Book delete(Book book) {
-		// TODO Auto-generated method stub
-		return null;
+		
+		em.remove(book);
+		
+		return book;
 	}
 
 }
