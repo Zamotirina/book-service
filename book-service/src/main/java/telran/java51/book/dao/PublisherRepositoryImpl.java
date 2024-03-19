@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.TypedQuery;
 import telran.java51.book.model.Publisher;
 
 @Repository //Так добавляем в аппликационный контекст
@@ -34,10 +35,20 @@ public class PublisherRepositoryImpl implements PublisherRepository {
 	@Override
 	public Stream<Publisher> findDistinctByBooksAuthorsName(String authorName) {
 		
+		/*
+		 * Мое решение
+		 */
 	
-		jakarta.persistence.Query query = em.createQuery("select distinct publisher p from Book b join b.authors a join b.publisher p where a.name=:authorName")
-		.setParameter("authorName",authorName);
-				
+//		jakarta.persistence.Query query = em.createQuery("select distinct publisher p from Book b join b.authors a join b.publisher p where a.name=:authorName")
+//		.setParameter("authorName",authorName);
+		
+		/*
+		 * Решение Эдуарда. Все тоже самое, только он предпочитает использовать типизированную Query
+		 */
+		
+		TypedQuery <Publisher> query = em.createQuery("select distinct publisher p from Book b join b.authors a join b.publisher p where a.name=?1", Publisher.class);
+		query.setParameter(1,authorName);
+		
 		return query.getResultStream();
 	}
 

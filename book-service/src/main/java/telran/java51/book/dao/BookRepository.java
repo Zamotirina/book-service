@@ -30,4 +30,6 @@ public interface BookRepository {
 	Book save(Book book);
 	Optional<Book> findById(String isbn);
 	Book delete(Book book);
+	
+	void deleteById (String isbn) ;
 }

@@ -105,17 +105,23 @@ public class BookServiceImpl implements BookService {
 		return modelMapper.map(book, BookDto.class);
 	}
 
-	@Transactional
-	@Override
-	public BookDto deleteBookByIsbn(String isbn) {
-		
-		Book book = bookRepository.findById(isbn).orElseThrow(EntityNotFoundException::new);
-		
-		bookRepository.delete(book);
-		
-		return modelMapper.map(book, BookDto.class);
-		
-	}
+
+	
+	/*
+	 * Ошибка 1. Комменитируем @Transactional и получаем, что изменение НЕ фиксируется в базе данных
+	 * 
+	 *  Даже если добавляем bookRepository.save(book); все равно не срабатывает
+	 *  
+	 *  Метод сработает только если мы еще в BookReposotoryImpl поставим @Transactional над методом save(), то есть все равно добавим транзакционность, только не в сервисе, а в репозитории
+	 *  
+	 *  Отсюда мы понимаем, что у Spring Data все операции на изменение (в том числе добавление и удаление) транзакционные 
+	 * 
+	 *  Потому что чтобы выполнился метод persist() соединение должно оставаться открытым, иначе метод не сработает
+	 *  
+	 *  Соответственно мы можем ставить @@Transactional  в двух местах. Но если его ставим здесь, то строчка bookRepository.save(book); уже не нужна. Если там, то нужна
+	 *  
+	 *  Эдуард советует мыслить критическими секциями, как в мальти-трединге
+	 */
 	@Transactional
 	@Override
 	public BookDto updateBookTitle(String isbn, String newTitle) {
@@ -124,10 +130,32 @@ public class BookServiceImpl implements BookService {
 
 		book.setTitle(newTitle);
 		
+		//bookRepository.save(book);
+		
 		return modelMapper.map(book, BookDto.class);
 	}
 	
-	@Transactional(readOnly = true)
+	/*
+	 * Здесь точно атк же можно перенести @Transactional в репозиторий
+	 */
+	@Transactional
+	@Override
+	public BookDto deleteBookByIsbn(String isbn) {
+		
+		Book book = bookRepository.findById(isbn).orElseThrow(EntityNotFoundException::new);
+//		
+//		bookRepository.delete(book);
+		
+		BookDto dto=modelMapper.map(book, BookDto.class);
+		
+		bookRepository.deleteById(isbn);
+		
+		return dto;
+		
+	}
+	
+	
+	//@Transactional(readOnly = true) Все эти методы у нас перестали требовать эту аннотацию, так как стримы которые возвращает Spring- это прокси, поэтому он требовал поддерживать соединение пока не выполнит терминальную операцию, а EntityManager возвращает уже настоящий стрим. То есть мы его поулчили и дальше работаем 
 	@Override
 	public Iterable <BookDto> findAllBooksByAuthor(String author) {
 		
@@ -140,7 +168,8 @@ public class BookServiceImpl implements BookService {
 		
 	}
 
-	@org.springframework.transaction.annotation.Transactional(readOnly = true)
+	//@Transactional(readOnly = true) Все эти методы у нас перестали требовать эту аннотацию, так как стримы которые возвращает Spring- это прокси, поэтому он требовал поддерживать соединение пока не выполнит терминальную операцию, а EntityManager возвращает уже настоящий стрим. То есть мы его поулчили и дальше работаем 
+
 	@Override
 	public Iterable<BookDto> findAllBooksByPublisher(String publisher) {
 		
@@ -156,13 +185,12 @@ public class BookServiceImpl implements BookService {
 		
 		Book book = bookRepository.findById(isbn).orElseThrow(EntityNotFoundException::new);
 
-		
 		return book.getAuthors().stream().map(x-> modelMapper.map(x, AuthorDto.class)).collect(Collectors.toSet());
 
 	}
 
 
-	
+	//@Transactional(readOnly = true) Все эти методы у нас перестали требовать эту аннотацию, так как стримы которые возвращает Spring- это прокси, поэтому он требовал поддерживать соединение пока не выполнит терминальную операцию, а EntityManager возвращает уже настоящий стрим. То есть мы его поулчили и дальше работаем 
 	@Override
 	public Iterable<String> findPublisherByAuthor(String author) {
 		
@@ -179,19 +207,19 @@ public class BookServiceImpl implements BookService {
 	public AuthorDto deleteAuthor(String author) {
 	
 		
-		Author auth = authorRepository.findById(author).orElseThrow(EntityNotFoundException::new);
-		
-		bookRepository.deleteBooksByAuthorsName(author);
-		
-		authorRepository.deleteById(auth.getName());
-		
-		return modelMapper.map(auth, AuthorDto.class);
-		
 //		Author auth = authorRepository.findById(author).orElseThrow(EntityNotFoundException::new);
 //		
-//		authorRepository.deleteById(author);
+//		bookRepository.deleteBooksByAuthorsName(author);
+//		
+//		authorRepository.deleteById(auth.getName());
 //		
 //		return modelMapper.map(auth, AuthorDto.class);
+		
+		Author auth = authorRepository.findById(author).orElseThrow(EntityNotFoundException::new);
+		
+		authorRepository.deleteById(author);
+		
+		return modelMapper.map(auth, AuthorDto.class);
 		
 	}
 
