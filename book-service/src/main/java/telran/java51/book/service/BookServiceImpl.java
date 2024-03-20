@@ -146,11 +146,11 @@ public class BookServiceImpl implements BookService {
 //		
 //		bookRepository.delete(book);
 		
-		BookDto dto=modelMapper.map(book, BookDto.class);
+	//	BookDto dto=modelMapper.map(book, BookDto.class);
 		
 		bookRepository.deleteById(isbn);
 		
-		return dto;
+		return modelMapper.map(book, BookDto.class);
 		
 	}
 	

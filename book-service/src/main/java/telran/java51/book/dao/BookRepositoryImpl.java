@@ -80,8 +80,14 @@ public class BookRepositoryImpl implements BookRepository {
 
 	@Override
 	public Optional<Book> findById(String isbn) {
+		
+		TypedQuery <Book> query = em.createQuery("select b from Book b left join fetch b.authors a where b.isbn=?1", Book.class);
+		
+        query.setParameter(1, isbn);
+		
+		//Book book = query.getSingleResult();
 
-		return Optional.ofNullable(em.find(Book.class,isbn));
+		return Optional.ofNullable(query.getSingleResult());
 	}
 
 	/*
@@ -108,13 +114,15 @@ public class BookRepositoryImpl implements BookRepository {
 		
 
 	}
-	
+	//@Transactional
 	public void deleteById (String isbn) {
 		
-		Query query = em.createQuery("delete from Book b where b.isbn=?1")
+		Query query = em.createQuery("delete Book b where b.isbn=?1")
 				.setParameter(1,isbn);
 	
 		query.executeUpdate();
+		
+		
 	}
 
 }
