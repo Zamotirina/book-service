@@ -77,6 +77,16 @@ public class BookRepositoryImpl implements BookRepository {
 		em.persist(book);
 		return book;
 	}
+	
+	/*
+	 * В итоге мы сделали тут два метода поиска.
+	 * 
+	 * Один с цчетом ленивой инициализации, а другой без
+	 * 
+	 * Пользуемся и тем и другим по необходимости. То есть если мы не планируем потом что-то делать с автоами, лучше использовать более простой метод, чтобы не усложнять работу вытягиваем сета авторов
+	 * 
+	 * Если мы что-то потом планируем делать, то лучше вытащить
+	 */
 
 	@Override
 	public Optional<Book> findById(String isbn) {
@@ -88,6 +98,14 @@ public class BookRepositoryImpl implements BookRepository {
 		//Book book = query.getSingleResult();
 
 		return Optional.ofNullable(query.getSingleResult());
+	}
+	
+	@Override
+	public Optional<Book> findByIsbn(String isbn) {
+		
+		em.find(Book.class, isbn);
+	
+		return Optional.ofNullable(em.find(Book.class, isbn));
 	}
 
 	/*

@@ -100,7 +100,7 @@ public class BookServiceImpl implements BookService {
 	@Override
 	public BookDto findBookByIsbn(String isbn) {
 	
-		Book book=bookRepository.findById(isbn).orElseThrow(EntityNotFoundException::new);
+		Book book=bookRepository.findByIsbn(isbn).orElseThrow(EntityNotFoundException::new);
 		
 		return modelMapper.map(book, BookDto.class);
 	}
@@ -126,7 +126,7 @@ public class BookServiceImpl implements BookService {
 	@Override
 	public BookDto updateBookTitle(String isbn, String newTitle) {
 		
-		Book book = bookRepository.findById(isbn).orElseThrow(EntityNotFoundException::new);
+		Book book = bookRepository.findByIsbn(isbn).orElseThrow(EntityNotFoundException::new);
 
 		book.setTitle(newTitle);
 		
@@ -183,7 +183,7 @@ public class BookServiceImpl implements BookService {
 	@Override
 	public Iterable<AuthorDto> findAllAuthorsByBook(String isbn) {
 		
-		Book book = bookRepository.findById(isbn).orElseThrow(EntityNotFoundException::new);
+		Book book = bookRepository.findByIsbn(isbn).orElseThrow(EntityNotFoundException::new);
 
 		return book.getAuthors().stream().map(x-> modelMapper.map(x, AuthorDto.class)).collect(Collectors.toSet());
 
